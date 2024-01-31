@@ -12,6 +12,7 @@ export const tetrisMachine = setup({
     },
     events: {} as
       | { type: 'GAME_START' }
+      | { type: 'RESTART_GAME' }
       | { type: 'TICK' }
       | { type: 'ROTATE' }
       | { type: 'SPEEDUP_DOWN' }
@@ -104,6 +105,9 @@ export const tetrisMachine = setup({
     cleanLine: ({ context }) => {
       context.place.cleanLine()
     },
+    cleanPlace: ({ context }) => {
+      context.place = new Place()
+    },
   },
   guards: {
     'is collide piece': ({ context: { currentPiece, place } }) =>
@@ -115,15 +119,16 @@ export const tetrisMachine = setup({
     'is at Bottom': ({ context: { currentPiece, place } }) =>
       place.checkPieceIsAtBottom(currentPiece.getCoordinates()),
 
-    'is at Top': () => false,
+    'is at Top': ({ context: { currentPiece, place } }) =>
+      place.checkIsPiecesCollide(currentPiece.getCoordinates()),
 
     'is line': ({ context: { place } }) => place.checkIsLine(),
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAEYA7ABZcAVm0A2AByaAnACY9g4+u0BmYwBoQAT0S39g74Ltn1xsaGeoYAvqEuqJg4uACSCiQAChiSUBhwsLQciSwsACIAqolseQDyAOr4QqJIIFIycorKaghm5riaeprG9m2C9oYBZi7uCPYOuD7eFmZG3o5hESBR2HjxSSlpGVkAMhVFJRVVIsr1svJKtS1mnqbW2pqGFkED2iMaAfa4hpoBT+PqdT+RaRdCrOIJZKpdKwTLIWIAYQA0tVTtJzk0rhpBJp3q17OpcIDDDYzP5ARZBuFQdE1pDNjC8IRSDxJABXBQQWio2pnRqXUAtCyCElErQWbTGQSSvS2Qx4wHqL4-P7qQxkwGOanLMExdZQrawgjEEisjlc-jqGoSdH85oaCwWTS4SxtCUGMzeZxuRBtMyTSzBbQirqzCzalZ6+nQjK4BGKTCSAA2tB4pW4yBYPJtDQu9oQ6j09i+egs4x6IrMpaVeMMDxdIspEsdelL9gjurpGxjRvjCkTKaYpQAauwdiwAGICE68215rEFoslsuS+yV6v2PE6XT2PRmXoi9SOoId2kQ7uGvB9ge0Iejtg8WJkAAS0+tdTnmMFGiX+hXFfVDc8WMYNcFsKwAilYUgWMU9wX1BlY2vFIUzyNNijKSpsw-XMv1UB011wXoQJ0OsWxxYDjAsb5elLWVHhFEU4KjC9GTjAALMAAGMAGsSFiWASFKNk0CEgAzEgACFJAwCAwAwbkZxzDEBXwxcnm+Ot1EEfxNF8bQtDxfdnUpEIjA1ToBmYrsDTYhFON4-jBOE0TSgk6TZPk7krTRXDVJaQtiz-cs10Aiwax9AtBBmXBwtMTpfELKxtGs89bKQhy+IEoSRPEqSZLkhT+Asd8+Xnb9F38F0SRuUtHkMQx7FxSLWz0F0iyVbRgydKV2yWSMbMQ3tMqckgGFE6S0DQSQqEU0rP38xAut0O5EsPH5uma0ZtKsIigTi3x6LMVKEJ7K8Ruy8b8qmmbvPmvz82WsCEsBdbNE2oygoGEljDJMxBkrE7o0vDjuKywSrsm6bZuK+6VMerrnusV7Bg20wtwMoknn+v5BlIoHWIysHRp2LAFDobCyrwlo5TA547BA7SjACBV5iJTobnMWxg16An0uG4nstJ8m7t8+GF1pqjucZ6VBm9UYq2dLQ9yCdVNAlE9tQUSQ5PgWoBrFu0FwAWnlSLTdS5lyGoMBDfKtTtAsYDqKmfT-ECBq+aGvXlKNiq9zxR3CW0DqCSVLompBHUz1OkGrbNTk7ep312ga4NyTVR2A8i-djCIx3gkpaKV00L2zrjBMUKTxaC2DQQOmCBr1Y9dWt3VyY7DovQjw68N+s7NLvdBxzspcvKPMK6v8y0WYOn+ywuabd68T3L4cSsVtxneywUv7mPgbsi6IYmyQbqoKeFwg6q7hDsPi03HODH0QMix6-dHbLkH7MFwThdt2cHoLgaoYIkkoQ57h0N0R2RlBhgQLkWaszx1apUoDQISAA3eSF8KqOiPERWq0VjCtk9E6BUioXRxVRnYJUfVwhAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAEYA7AE5cAVgAsANgAc2gMzatggEwH1RgDQgAnolM3c2m3pM7zBjZGNgEAvqHOqJg4uACSCiQAChiSUBhwsLQciSwsACIAqolseQDyAOr4QqJIIFIycorKagjqNtp6uAbmmno95m09fs5urbbmuFrqfpohs7ZG4ZHo2HjxSSlpGVkAMhVFJRVVIsr1svJKtS1t2pr6hprq5u2GBoKaIxrq6rrBBtraAwmIzmPQ+GxLEBRVZxBLJVLpWCZZCxADCAGlqqdpOcmldEJZPIC+sYgv8TIJ1J8EB4uv92m8HA5DJDoTF1vCtkjcKiABZgADGAGsSLFYCQGGgSAAhSRoNCSKi0LG1M6NS6gFqacyCXAmGyCcxGR4dAz-bTU0wGXBGAGgg06A2WVkrdlwzaIvB8wUisUSqWy+WK5XqGoSHHq5qIbW6-WG40-V4A6l6by4TTGH6CWx+A16F3RNbuhEZHn84Wi8WSmVyhVK-g2MN1CMXKMIGN6p0J03m6kmM24AI+bpWIyUvTqAswjke0veit+nZYBR0FXhhqt-GtdS2dPa4yCAx6PQfVzuYL3Mfa56aTSCIyTiJQ11FjYl7nz33ipcrkNNtWbpqXy7reARjkeJ6Wg4l5PK8pgmPmT5sq+nKegQxAkDwkgAK4KBAyonKqLZ4kBCBgtS6h9EYuDvBSvi3AMthTm6b5cnghCkFhuH4fwobYhuJGqBoE4TH4ei2NqdhWDY1J3p4wJjg4by9D85jMShs4foomCSAANrQPClNwyAsGuzYCRqQmtCYPxdPBNg2N8x5gqeowTnc2j3uoxgZoIYIOepsKsWhqLaSk+lMKUABq7A7CwABiAiEeuuKWdcNm6MYJj6o5lHHjYrnuN5g6pgMmjZaCnmLEhL5Bahc5hXptCRTFbA8LEZAABJJf+xFpRoGV2dlDlOflhXtjueqDBlFgOL0gUzu+XqNfpeSGcUZSVGZAGCdcE7UQEPSGDZlFmjJZ40veXRtP2YJGGa4kmAtxZsWWPqViQpTYVKpQAGY1hgEBgBgBG9RZbbTECNqCKaRjiceY7mH27y4EEzkDEaISps9wVzuWX6fd9n3-bKgPA3+-GpRDg1ZTlo0uX2AKo9MjwTsCJoQjVhZ1ZpXr4x9X0-STkhkyDDZg1TW4sx597PCeaO2Ho1KBJ0HQ6lYsygjqmiBZQNCfQAbuTPAsFwvDIGwjCsNtfUQzo+hZRYGu2PYTgXTZ+jZtm3lWNl92IU+CiSED8C1MhlORluAC0bujDHNFe4nScIYFHHkNQYAR4BVmBJavSDirR7eL02hPVz04vZ6We7QSA7EmBZKl5S1LtOoXR9N8VjTAaVg4-VH78361aBnW1f9WRPReN5O46kC3TArJfleD4CEryrfl97zb0Lt+y6Z0R4Nbh0ngw+YFLAmfqappajmow5vQ6vtwRl8s3OLa9adcXhY8Q2j0MWKzF4IQkYXTHAdMwR5vJmFHNVV+FdcZaQUDpXSP8pamGoo8U+JhLB+FBAYS0gQaLeTNG8bwIIwjlxYv3Pm70-SC2JgDIGGBUGkQNBSdMgRDrYLPlofBF1jATHeHYbBHRKTfE5nAmIeswCG2BiwqyBprQ2BsiEbyjlQSUhMBRMEJgOEGFmHaNortwjhCAA */
   id: 'Tetris',
   context: {
-    place: new Place(mapWidth, mapHeight),
+    place: new Place(),
     currentPiece: PieceMap[0],
   },
   initial: 'New Game',
@@ -185,13 +190,13 @@ export const tetrisMachine = setup({
           ],
         },
         'New Round': {
-          entry: ['generateNewPiece', 'renderPiece'],
+          entry: ['generateNewPiece'],
           always: [
             {
               guard: 'is at Top',
               target: '#Tetris.Game Over',
             },
-            { target: 'Control' },
+            { actions: 'renderPiece', target: 'Control' },
           ],
         },
         Control: {
@@ -234,6 +239,13 @@ export const tetrisMachine = setup({
         },
       },
     },
-    'Game Over': {},
+    'Game Over': {
+      on: {
+        RESTART_GAME: {
+          target: 'New Game',
+          actions: 'cleanPlace',
+        },
+      },
+    },
   },
 })

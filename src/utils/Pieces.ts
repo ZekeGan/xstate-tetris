@@ -5,6 +5,7 @@ class Piece_Basic {
   protected xAxis: number = 4
   protected yAxis: number = 0
   protected pieceHistory: MatrixHistory[] = []
+
   constructor(matrix: Matrix) {
     this.matrix = matrix
   }
@@ -19,6 +20,7 @@ class Piece_Basic {
       .flat()
       .filter((x) => x) as CoordinateType[]
   }
+
   protected _rotate() {
     const rows = this.matrix.length
     const cols = this.matrix[0].length
@@ -35,6 +37,7 @@ class Piece_Basic {
 
     this.matrix = rotatedMatrix
   }
+
   protected _saveHistory() {
     this.pieceHistory.push({
       matrix: this.matrix,

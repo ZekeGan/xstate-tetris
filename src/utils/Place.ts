@@ -1,8 +1,9 @@
+import { mapHeight, mapWidth } from '../config'
 import { CoordinateType, PlaceType } from '../type'
 
 export class Place {
-  private _width!: number
-  private _height!: number
+  private _width: number = mapWidth
+  private _height: number = mapHeight
   private _staticPlace!: PlaceType
   private _place!: PlaceType
   private _lineIndexes: number[] = []
@@ -26,9 +27,7 @@ export class Place {
       .map(() => Array(this._width).fill(0)) as CoordinateType[]
   }
 
-  constructor(mapWidth: number, mapHeight: number) {
-    this._width = mapWidth
-    this._height = mapHeight
+  constructor() {
     this._staticPlace = this._generateEmptyPlace()
     this._place = this._generateEmptyPlace()
   }
@@ -50,7 +49,6 @@ export class Place {
   // Check
   public checkPieceIsAtBottom(currentPieceCoordinates: CoordinateType[]) {
     const maxYaxisNumber = Math.max(...currentPieceCoordinates.map(([y]) => y))
-
     if (maxYaxisNumber > this._height - 1) return true
     return false
   }

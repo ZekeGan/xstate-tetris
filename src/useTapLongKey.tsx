@@ -7,9 +7,9 @@ export const useTapLongKey = (key: string, callback: () => void) => {
   useHotkeys(
     key,
     () => {
-      if (timer && invl) {
-        clearTimeout(timer)
-        clearInterval(invl)
+      if (timer || invl) {
+        clearTimeout(timer!)
+        clearInterval(invl!)
       }
       callback()
     },

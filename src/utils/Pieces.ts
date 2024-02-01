@@ -1,29 +1,39 @@
-import { CoordinateType, Matrix, MatrixHistory } from '../type'
+import {
+  Control,
+  ControlHistory,
+  CoordinateType,
+  Matrix,
+  MatrixHistory,
+  PieceType,
+} from '../type'
 
-class Piece_Basic {
-  protected matrix: Matrix
-  protected xAxis: number = 4
-  protected yAxis: number = 0
-  protected pieceHistory: MatrixHistory[] = []
+export class Piece {
+  private _pieceType!: PieceType
+  private _matrix: Matrix
+  private _xAxis: number = 4
+  private _yAxis: number = 0
+  private _coordinatesHistory: MatrixHistory[] = []
+  private _controlHistory: ControlHistory[] = []
 
-  constructor(matrix: Matrix) {
-    this.matrix = matrix
+  constructor(matrix: Matrix, pieceType: PieceType) {
+    this._matrix = matrix
+    this._pieceType = pieceType
   }
 
-  protected _getCoordinates() {
-    return this.matrix
+  private _getCoordinates() {
+    return this._matrix
       .map((y, yIndex) => {
         return y.map((x, xIndex) =>
-          x !== 0 ? [yIndex + this.yAxis, xIndex + this.xAxis] : undefined,
+          x !== 0 ? [yIndex + this._yAxis, xIndex + this._xAxis] : undefined,
         )
       })
       .flat()
       .filter((x) => x) as CoordinateType[]
   }
 
-  protected _rotate() {
-    const rows = this.matrix.length
-    const cols = this.matrix[0].length
+  private _rotate() {
+    const rows = this._matrix.length
+    const cols = this._matrix[0].length
 
     // 創建一個新的矩陣，用來存儲旋轉後的結果
     const rotatedMatrix = new Array(cols).fill(0).map(() => new Array(rows).fill(0))
@@ -31,136 +41,180 @@ class Piece_Basic {
     // 進行旋轉計算
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
-        rotatedMatrix[j][rows - 1 - i] = this.matrix[i][j]
+        rotatedMatrix[j][rows - 1 - i] = this._matrix[i][j]
       }
     }
 
-    this.matrix = rotatedMatrix
+    this._matrix = rotatedMatrix
   }
 
-  protected _saveHistory() {
-    this.pieceHistory.push({
-      matrix: this.matrix,
-      xAxis: this.xAxis,
-      yAxis: this.yAxis,
+  private _saveCoordinatesHistory() {
+    this._coordinatesHistory.push({
+      matrix: this._matrix,
+      xAxis: this._xAxis,
+      yAxis: this._yAxis,
     })
-    if (this.pieceHistory.length > 10) {
-      this.pieceHistory.unshift()
+    if (this._coordinatesHistory.length > 10) {
+      this._coordinatesHistory.unshift()
     }
   }
-}
 
-export class Piece extends Piece_Basic {
-  constructor(matrix: Matrix) {
-    super(matrix)
+  private _saveControlHistory(control: Control) {
+    this._controlHistory.push({
+      control,
+      pieceType: this._pieceType,
+    })
+    if (this._controlHistory.length > 10) {
+      this._controlHistory.unshift()
+    }
   }
-  /**
-   * get the coordinates of current piece
-   */
-  public getCoordinates() {
+
+  get coordinates() {
     return this._getCoordinates()
   }
+
   /**
    * rotate the current piece
    * @returns void
    */
   public rotate() {
-    this._saveHistory()
+    this._saveControlHistory('Rotate')
+    this._saveCoordinatesHistory()
     this._rotate()
   }
   /**
    * move the current piece to right
    */
-  public MoveRight() {
-    this._saveHistory()
-    this.xAxis = this.xAxis + 1
+  public moveRight() {
+    this._saveControlHistory('Right')
+    this._saveCoordinatesHistory()
+    this._xAxis = this._xAxis + 1
   }
   /**
    * move the current piece to left
    */
-  public MoveLeft() {
-    this._saveHistory()
-    this.xAxis = this.xAxis - 1
+  public moveLeft() {
+    this._saveControlHistory('Left')
+    this._saveCoordinatesHistory()
+    this._xAxis = this._xAxis - 1
   }
   /**
    * move current piece down
    */
-  public MoveDown() {
-    this._saveHistory()
-    this.yAxis = this.yAxis + 1
+  public moveDown() {
+    this._saveCoordinatesHistory()
+    this._yAxis = this._yAxis + 1
   }
 
   public restoreHistory() {
-    if (this.pieceHistory.length === 0)
+    if (this._coordinatesHistory.length === 0)
       throw new Error('PieceHistory does not have any history')
-    const { matrix, xAxis, yAxis } = this.pieceHistory.pop() as MatrixHistory
-    this.matrix = matrix
-    this.xAxis = xAxis
-    this.yAxis = yAxis
+    const { matrix, xAxis, yAxis } = this._coordinatesHistory.pop() as MatrixHistory
+
+    this._matrix = matrix
+    this._xAxis = xAxis
+    this._yAxis = yAxis
+  }
+
+  public moveAxisByNumber(axis: 'x' | 'y', number: number) {
+    if (axis === 'x') this._xAxis -= number
+    if (axis === 'y') this._yAxis -= number
+  }
+
+  public checkIsTSpin() {
+    let isTSpin = false
+    if (this._controlHistory.length === 0) return isTSpin
+
+    const controlHistory = this._controlHistory.pop()
+    if (controlHistory!.pieceType === 'T' && controlHistory!.control === 'Rotate') {
+      isTSpin = true
+    }
+    return isTSpin
   }
 }
 
 class I_Piece extends Piece {
   constructor() {
-    super([
-      [0, 1, 0, 0],
-      [0, 1, 0, 0],
-      [0, 1, 0, 0],
-      [0, 1, 0, 0],
-    ])
+    super(
+      [
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+      ],
+      'I',
+    )
   }
 }
 class J_Piece extends Piece {
   constructor() {
-    super([
-      [0, 1, 0],
-      [0, 1, 0],
-      [1, 1, 0],
-    ])
+    super(
+      [
+        [0, 1, 0],
+        [0, 1, 0],
+        [1, 1, 0],
+      ],
+      'J',
+    )
   }
 }
 class L_Piece extends Piece {
   constructor() {
-    super([
-      [0, 1, 0],
-      [0, 1, 0],
-      [0, 1, 1],
-    ])
+    super(
+      [
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 1, 1],
+      ],
+      'L',
+    )
   }
 }
 class O_Piece extends Piece {
   constructor() {
-    super([
-      [1, 1],
-      [1, 1],
-    ])
+    super(
+      [
+        [1, 1],
+        [1, 1],
+      ],
+      'O',
+    )
   }
 }
 class S_Piece extends Piece {
   constructor() {
-    super([
-      [0, 1, 1],
-      [1, 1, 0],
-      [0, 0, 0],
-    ])
+    super(
+      [
+        [0, 1, 1],
+        [1, 1, 0],
+        [0, 0, 0],
+      ],
+      'S',
+    )
   }
 }
 class T_Piece extends Piece {
   constructor() {
-    super([
-      [0, 1, 0],
-      [1, 1, 1],
-      [0, 0, 0],
-    ])
+    super(
+      [
+        [0, 1, 0],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      'T',
+    )
   }
 }
 class Z_Piece extends Piece {
   constructor() {
-    super([
-      [1, 1, 0],
-      [0, 1, 1],
-      [0, 0, 0],
-    ])
+    super(
+      [
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0],
+      ],
+      'Z',
+    )
   }
 }
 

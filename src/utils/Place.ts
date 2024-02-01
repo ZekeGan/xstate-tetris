@@ -1,5 +1,5 @@
-import { mapHeight, mapWidth } from '../config'
-import { CoordinateType, PlaceType } from '../type'
+import { TSpinPlace, mapHeight, mapWidth } from '../config'
+import { CollideType, CoordinateType, PlaceType } from '../type'
 
 export class Place {
   private _width: number = mapWidth
@@ -8,17 +8,23 @@ export class Place {
   private _place!: PlaceType
   private _lineIndexes: number[] = []
   private _score: number = 0
+  private _lineCount: number = 0
+  private _outRangeLength: number = 0
 
   get place() {
     return this._place
   }
-
   get score() {
     return this._score
   }
-
   get lineIndexes() {
     return this._lineIndexes
+  }
+  get outRangeLength() {
+    return this._outRangeLength
+  }
+  get lineCount() {
+    return this._lineCount
   }
 
   private _generateEmptyPlace() {
@@ -32,6 +38,47 @@ export class Place {
     this._place = this._generateEmptyPlace()
   }
 
+  private _getPieceBorderInfo(coordinates: CoordinateType[], collideType: CollideType) {
+    let isOut = false
+    const outRangeLengthList: number[] = []
+
+    const collideFunctionMap: Record<CollideType, () => void> = {
+      left: () =>
+        coordinates.forEach(([y, x]) => {
+          if (x < 0) {
+            outRangeLengthList.push(x)
+            isOut = true
+          }
+        }),
+      right: () =>
+        coordinates.forEach(([_, x]) => {
+          if (x > this._width - 1) {
+            outRangeLengthList.push(x)
+            isOut = true
+          }
+        }),
+      bottom: () =>
+        coordinates.forEach(([y]) => {
+          if (y > this._height - 1) {
+            outRangeLengthList.push(y)
+            isOut = true
+          }
+        }),
+    }
+
+    collideFunctionMap[collideType]()
+
+    const outRangeMap: Record<CollideType, number> = {
+      left: Math.min(...outRangeLengthList),
+      right: Math.max(...outRangeLengthList) - (this._width - 1),
+      bottom: Math.max(...outRangeLengthList) - (this._height - 1),
+    }
+
+    return {
+      isOut,
+      outRangeLength: outRangeLengthList.length === 0 ? 0 : outRangeMap[collideType],
+    }
+  }
   // Place
   public renderPlace(currentPieceCoordinates: CoordinateType[]) {
     const newPlace = JSON.parse(JSON.stringify(this._staticPlace)) // deep copy
@@ -46,30 +93,30 @@ export class Place {
       this._staticPlace[y][x] = 1
     })
   }
-  // Check
-  public checkPieceIsAtBottom(currentPieceCoordinates: CoordinateType[]) {
-    const maxYaxisNumber = Math.max(...currentPieceCoordinates.map(([y]) => y))
-    if (maxYaxisNumber > this._height - 1) return true
-    return false
-  }
 
+  // Check
   public checkIsPiecesCollide(currentPieceCoordinates: CoordinateType[]) {
     let isCollide = false
 
     currentPieceCoordinates.forEach(([y, x]) => {
-      if (this._place[y] && this._place[y][x] === 1) return (isCollide = true)
+      if (this._place[y] && this._place[y][x] === 1) {
+        isCollide = true
+        return
+      }
     })
     return isCollide
   }
 
-  public checkPieceIsOutOfBorder(currentPieceCoordinates: CoordinateType[]) {
-    let isOut = false
-    currentPieceCoordinates.forEach(([y, x]) => {
-      if (x < 0 || x > this._width - 1) {
-        isOut = true
-        return
-      }
-    })
+  public checkPieceIsOutRange(
+    currentPieceCoordinates: CoordinateType[],
+    collideType: CollideType,
+  ) {
+    const { isOut, outRangeLength } = this._getPieceBorderInfo(
+      currentPieceCoordinates,
+      collideType,
+    )
+
+    this._outRangeLength = outRangeLength
     return isOut
   }
 
@@ -94,22 +141,42 @@ export class Place {
     this._staticPlace = newStaticPlace
   }
 
-  public calcScore() {
-    if (this._lineIndexes.length === 0) return 0
-    let score = 0
+  private _calcNormalScore() {
+    if (this._lineIndexes.length === 0) return { score: 0, lineCount: 0 }
+    let score: number = 0
     let pointer = 0
     let streakMultiplier = 1
+
+    const lineCount: number[] = []
+    let temp = 1
 
     while (pointer < this._lineIndexes.length) {
       score += 1 * 100 * streakMultiplier
       if (this._lineIndexes[pointer] + 1 === this._lineIndexes[pointer + 1]) {
         pointer += 1
         streakMultiplier += 0.2
+        temp++
         continue
       }
+      lineCount.push(temp)
+      temp = 1
       streakMultiplier = 1
       pointer += 1
     }
+
+    return {
+      score,
+      lineCount: Math.max(...lineCount),
+    }
+  }
+
+  public calcScore() {
+    const { score, lineCount } = this._calcNormalScore()
     this._score += score
+    this._lineCount = lineCount
+  }
+
+  public calcTSpineScroe() {
+    this._score += 500
   }
 }

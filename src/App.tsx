@@ -3,14 +3,15 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import { tetrisMachine } from './tetrisMachine'
 import './App.css'
 import { useTapLongKey } from './useTapLongKey'
+import { Children, FC, ReactNode } from 'react'
 
 const EmptyBlock = () => (
   <div
     style={{
       width: '20px',
       height: '20px',
-      backgroundColor: '#ccc',
-      border: '1px solid white',
+      backgroundColor: '#333',
+      border: '1px solid #333',
     }}
   />
 )
@@ -20,8 +21,8 @@ const Block = () => (
     style={{
       width: '20px',
       height: '20px',
-      backgroundColor: 'black',
-      border: '1px solid white',
+      backgroundColor: '#aaa',
+      border: '1px solid #aaa',
     }}
   />
 )
@@ -41,13 +42,13 @@ const Block = () => (
  *  // 左右馬上反應 #應該在持續按下後觸發快速左右功能
  *  // 頂點偵測遊戲結束
  *  // 重新開始遊戲
- *  地圖邊緣能旋轉
- *  顯示預計落下的位置
+ *  // 地圖邊緣能旋轉 #計算旋轉後超過邊界的長度，移動piece的位置
+ *  // T轉Bonus
  *  畫面重新設計
- *  顯示之後的方塊
  *  消除方塊動畫
+ *  顯示預計落下的位置
+ *  顯示之後的方塊
  *  Tetris動畫
- *  T轉Bonus
  *
  */
 
@@ -70,13 +71,18 @@ function App() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {state.matches('New Game') && <div>New Game</div>}
       {state.matches('Game Over') && <div>Game Over</div>}
+      {state.context.popupText && <div>{state.context.popupText}</div>}
 
       <div>{state.context.place.score}</div>
       <div>
         {state.context.place.place.map((x, xIndex) => (
           <div key={xIndex} style={{ display: 'flex' }}>
-            {x.map((y, yIndex) =>
-              y !== 0 ? <Block key={yIndex} /> : <EmptyBlock key={yIndex} />,
+            {state.context.place.lineIndexes.includes(xIndex) ? (
+              <div>BAD</div>
+            ) : (
+              x.map((y, yIndex) =>
+                y !== 0 ? <Block key={yIndex} /> : <EmptyBlock key={yIndex} />,
+              )
             )}
           </div>
         ))}

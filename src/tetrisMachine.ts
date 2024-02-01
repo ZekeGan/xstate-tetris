@@ -1,16 +1,17 @@
-import { EventObject, fromCallback, setup, sendTo } from 'xstate'
+import { EventObject, fromCallback, setup, sendTo, or, assign } from 'xstate'
 import { Piece, PieceMap } from './utils/Pieces'
 import { Place } from './utils/Place'
-import { downSpeed, mapHeight, mapWidth } from './config'
+import { animationDuration, downSpeed } from './config'
 import { CoordinateType } from './type'
 
 export const tetrisMachine = setup({
-  types: {
-    context: {} as {
+  types: {} as {
+    context: {
       place: Place
       currentPiece: Piece
-    },
-    events: {} as
+      popupText: string
+    }
+    events:
       | { type: 'GAME_START' }
       | { type: 'RESTART_GAME' }
       | { type: 'TICK' }
@@ -19,7 +20,8 @@ export const tetrisMachine = setup({
       | { type: 'SLOWUP_DOWN' }
       | { type: 'MOVE_RIGHT' }
       | { type: 'MOVE_LEFT' }
-      | { type: 'DROP_DOWN' },
+      | { type: 'DROP_DOWN' }
+      | { type: 'ACTIVATE_CLEAN' }
   },
   actors: {
     ticksLogic: fromCallback<EventObject>(({ sendBack, receive }) => {
@@ -42,18 +44,22 @@ export const tetrisMachine = setup({
 
       return () => clearInterval(defaultTick)
     }),
+    animationTimerLogic: fromCallback<EventObject>(({ sendBack }) => {
+      const timer = setTimeout(() => {
+        sendBack({ type: 'ACTIVATE_CLEAN' })
+      }, animationDuration)
+      return () => clearTimeout(timer)
+    }),
   },
   actions: {
     moveDown: ({ context }) => {
-      context.currentPiece.MoveDown()
+      context.currentPiece.moveDown()
     },
     moveRight: ({ context }) => {
-      context.currentPiece.MoveRight()
+      context.currentPiece.moveRight()
     },
     moveLeft: ({ context }) => {
-      console.log('left')
-
-      context.currentPiece.MoveLeft()
+      context.currentPiece.moveLeft()
     },
     rotatePiece: ({ context }) => {
       context.currentPiece!.rotate()
@@ -61,28 +67,19 @@ export const tetrisMachine = setup({
     dropDown: ({ context }) => {
       const piece = context.currentPiece
       const place = context.place
-      let coordinates: CoordinateType[] = piece.getCoordinates()
+      let coordinates: CoordinateType[] = piece.coordinates
 
       while (
-        !place.checkPieceIsAtBottom(coordinates) &&
+        !place.checkPieceIsOutRange(coordinates, 'bottom') &&
         !place.checkIsPiecesCollide(coordinates)
       ) {
-        piece.MoveDown()
-        coordinates = piece.getCoordinates()
-      }
-
-      piece.restoreHistory()
-      const historyCoordinates = piece.getCoordinates()
-      place.setMovingPieceStatic(historyCoordinates)
-
-      if (place.checkIsLine()) {
-        place.calcScore()
-        place.cleanLine()
+        piece.moveDown()
+        coordinates = piece.coordinates
       }
     },
     setPieceStatic: ({ context }) => {
-      context.currentPiece.restoreHistory()
-      const coordinates = context.currentPiece.getCoordinates()
+      // context.currentPiece.restoreHistory()
+      const coordinates = context.currentPiece.coordinates
       context.place.setMovingPieceStatic(coordinates)
     },
     generateNewPiece: ({ context }) => {
@@ -90,17 +87,48 @@ export const tetrisMachine = setup({
       const newPiece = PieceMap[randomNum]
       context.currentPiece = new newPiece()
     },
-    renderHistoryPiece: ({ context: { place, currentPiece } }) => {
-      currentPiece.restoreHistory()
-      const old_coordinates = currentPiece.getCoordinates()
-      place.renderPlace(old_coordinates)
+    movePieceWhenOutOfRange: (
+      { context: { place, currentPiece } },
+      { axis }: { axis: 'x' | 'y' },
+    ) => {
+      if (place.outRangeLength === 0) return
+      currentPiece.moveAxisByNumber(axis, place.outRangeLength)
+    },
+    restorePieceCoordinates: ({ context }) => {
+      context.currentPiece.restoreHistory()
     },
     renderPiece: ({ context: { place, currentPiece } }) => {
-      const current_coordinates = currentPiece.getCoordinates()
+      const current_coordinates = currentPiece.coordinates
       place.renderPlace(current_coordinates)
     },
     calcScore: ({ context }) => {
       context.place.calcScore()
+    },
+    TSpinCalc: ({ context: { place } }) => {
+      place.calcTSpineScroe()
+    },
+    assignPopupText: ({ context }, { popupText }: { popupText: string }) => {
+      let text = popupText
+
+      if (text === 'normal') {
+        switch (context.place.lineCount) {
+          case 1:
+            text = 'Single'
+            break
+          case 2:
+            text = 'Double!!'
+            break
+          case 3:
+            text = 'Triple!!!'
+            break
+          case 4:
+            text = 'Tetris!!!!'
+            break
+          default:
+            throw new Error('line count does not declare yet!!')
+        }
+      }
+      context.popupText = text
     },
     cleanLine: ({ context }) => {
       context.place.cleanLine()
@@ -110,26 +138,27 @@ export const tetrisMachine = setup({
     },
   },
   guards: {
-    'is collide piece': ({ context: { currentPiece, place } }) =>
-      place.checkIsPiecesCollide(currentPiece.getCoordinates()),
+    'is collide Left': ({ context: { currentPiece, place } }) =>
+      place.checkPieceIsOutRange(currentPiece.coordinates, 'left'),
+    'is collide Bottom': ({ context: { currentPiece, place } }) =>
+      place.checkPieceIsOutRange(currentPiece.coordinates, 'bottom'),
+    'is collide Right': ({ context: { currentPiece, place } }) =>
+      place.checkPieceIsOutRange(currentPiece.coordinates, 'right'),
 
-    'is out of Border': ({ context: { currentPiece, place } }) =>
-      place.checkPieceIsOutOfBorder(currentPiece.getCoordinates()),
-
-    'is at Bottom': ({ context: { currentPiece, place } }) =>
-      place.checkPieceIsAtBottom(currentPiece.getCoordinates()),
-
-    'is at Top': ({ context: { currentPiece, place } }) =>
-      place.checkIsPiecesCollide(currentPiece.getCoordinates()),
+    'is collide Piece': ({ context: { currentPiece, place } }) =>
+      place.checkIsPiecesCollide(currentPiece.coordinates),
 
     'is line': ({ context: { place } }) => place.checkIsLine(),
+
+    'is T Spin': ({ context: { currentPiece } }) => currentPiece.checkIsTSpin(),
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAEYA7AE5cAVgAsANgAc2gMzatggEwH1RgDQgAnolM3c2m3pM7zBjZGNgEAvqHOqJg4uACSCiQAChiSUBhwsLQciSwsACIAqolseQDyAOr4QqJIIFIycorKagjqNtp6uAbmmno95m09fs5urbbmuFrqfpohs7ZG4ZHo2HjxSSlpGVkAMhVFJRVVIsr1svJKtS1t2pr6hprq5u2GBoKaIxrq6rrBBtraAwmIzmPQ+GxLEBRVZxBLJVLpWCZZCxADCAGlqqdpOcmldEJZPIC+sYgv8TIJ1J8EB4uv92m8HA5DJDoTF1vCtkjcKiABZgADGAGsSLFYCQGGgSAAhSRoNCSKi0LG1M6NS6gFqacyCXAmGyCcxGR4dAz-bTU0wGXBGAGgg06A2WVkrdlwzaIvB8wUisUSqWy+WK5XqGoSHHq5qIbW6-WG40-V4A6l6by4TTGH6CWx+A16F3RNbuhEZHn84Wi8WSmVyhVK-g2MN1CMXKMIGN6p0J03m6kmM24AI+bpWIyUvTqAswjke0veit+nZYBR0FXhhqt-GtdS2dPa4yCAx6PQfVzuYL3Mfa56aTSCIyTiJQ11FjYl7nz33ipcrkNNtWbpqXy7reARjkeJ6Wg4l5PK8pgmPmT5sq+nKegQxAkDwkgAK4KBAyonKqLZ4kBCBgtS6h9EYuDvBSvi3AMthTm6b5cnghCkFhuH4fwobYhuJGqBoE4TH4ei2NqdhWDY1J3p4wJjg4by9D85jMShs4foomCSAANrQPClNwyAsGuzYCRqQmtCYPxdPBNg2N8x5gqeowTnc2j3uoxgZoIYIOepsKsWhqLaSk+lMKUABq7A7CwABiAiEeuuKWdcNm6MYJj6o5lHHjYrnuN5g6pgMmjZaCnmLEhL5Bahc5hXptCRTFbA8LEZAABJJf+xFpRoGV2dlDlOflhXtjueqDBlFgOL0gUzu+XqNfpeSGcUZSVGZAGCdcE7UQEPSGDZlFmjJZ40veXRtP2YJGGa4kmAtxZsWWPqViQpTYVKpQAGY1hgEBgBgBG9RZbbTECNqCKaRjiceY7mH27y4EEzkDEaISps9wVzuWX6fd9n3-bKgPA3+-GpRDg1ZTlo0uX2AKo9MjwTsCJoQjVhZ1ZpXr4x9X0-STkhkyDDZg1TW4sx597PCeaO2Ho1KBJ0HQ6lYsygjqmiBZQNCfQAbuTPAsFwvDIGwjCsNtfUQzo+hZRYGu2PYTgXTZ+jZtm3lWNl92IU+CiSED8C1MhlORluAC0bujDHNFe4nScIYFHHkNQYAR4BVmBJavSDirR7eL02hPVz04vZ6We7QSA7EmBZKl5S1LtOoXR9N8VjTAaVg4-VH78361aBnW1f9WRPReN5O46kC3TArJfleD4CEryrfl97zb0Lt+y6Z0R4Nbh0ngw+YFLAmfqappajmow5vQ6vtwRl8s3OLa9adcXhY8Q2j0MWKzF4IQkYXTHAdMwR5vJmFHNVV+FdcZaQUDpXSP8pamGoo8U+JhLB+FBAYS0gQaLeTNG8bwIIwjlxYv3Pm70-SC2JgDIGGBUGkQNBSdMgRDrYLPlofBF1jATHeHYbBHRKTfE5nAmIeswCG2BiwqyBprQ2BsiEbyjlQSUhMBRMEJgOEGFmHaNortwjhCAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAFYATABoQAT0QAOAIy51gi4PUAWQQE5N1zZvUBfV7tSYcuAJIKSAAUMSSgMOFhaDkCWFgARAFVAtjiAeQB1fCFRJBApGTlFZTUEY0EXXGsAZgB2ADYqwWM7GsMqwzrdAwRNFtwawSrjQxdB62bDa3dPdGw8fyCQsIiogBkMpJSMrJFlfNl5JVySss0asxsa9Rq7YzKa+q7ETSbcUYt1Q3U6hrstaZAXjmfgCwVC4VgkWQvgAwgBpbJ7aQHIrHRDGM5PBA1azWXB1ax1XpNQQDOxVOwAoE+BZg5aQ3AwgAWYAAxgBrEi+WAkBhoEgAIUkaDQkiotERuX2hSOoBK1kMdlwhiugxaTiq1Sq6ixdj6zjsgh+bXGTipsxpoKWELwzLZnO5vP5QpFYolxhyEmRMuKiAVSpV5gpOM0mqq2qxKsMuCqzijxiJgmsn3N3nmVvBEUZLI5XJ5fMFwtF4v4mk9eW9h19CH9ytVwY1Wp1+nRdzquGM2tqpMMVk1qeBtOtWbtucdqywCjokq9BSraIQ5POuPUsZaFOMq6qWOMTlM1j+9iJL2cVQHlsWmYZo4dPInU-d5el87liCXlWTa5qG63WIJpljTQ2j1ZM7hGc900velbQoAAbVkAFdYIoNAwBIDhWUkcIJV2KVK1RV8ehefd6l7TsCTsA8dw3SpPmuFxNV3YwaggkEoJtRk4MQ5DUPQzDsP4D0kTnAjVGeYjKlIpoqgoqiW1KM5NAuZw6i+FUrlYocrzwQhSB4SQEIUCAcKffDZTEoi7kk1TpNkuwsS0Kp8W+TQwNJTtvk0jNoIIYgSH0wzjME0yRPMk4wzMawamaJMbBGWo-ycDtvmY2NWlAqYPEBC1ILpDiYUUTBJFg2geFSbhkBYGcK1C6sE3UJVd0ENoPPJXcakjTdKiNBrDA6dRzGGLz2JHQqQhKphUgANXYVYWAAMQEXDZxRML0TqBqO1sFrtTaqLdSsr47B+cpajsfrhry0aFCKibpvYHhfDIAAJJaQtWuqNsa7ahl2oZ9vkspmpjDE2lUyZ6hYrLqVy4drzG4raDiMrkjSTJqufUTwsJXAmgapN6mO4CsW-PEGqJRU2n6zzoZytiruvHNbxIVIEP5VIADNCwwCAwAwEzhI+hd6u+5rfoa-6OsBso8XqOppNXTcorPWm03puHbSZvMWbZlmuaFHm+cfQWfWF1SlI2jbrjuT4HB0QHT3xGpnHKF4ZOqOpLo17N7W11n2f1rDef50t3tNwjmOqGMXmub9SL1Tp5OdpzP1xBjand1jKBoFmADcjZ4FguF4ZA2EYVgMbM6sXAqaoLCi0N1Axez5IPaMnD+SY-nMOpO1YhgFCwKgUMOWgGBhaEpoYSq2BhOaGB2MOXwsrQd1XJSk2aRwRhsuooayhRJF5+Bchhk3l-lLEAFp20sO-7+atxVeBXTyGoMBz6x54BnbUYZITFwFNE7dCbu2QCwFNRqUmF7bSn81rYhbt0Wo0ZNy901E4DamgCQwJ8jebWBYXTFjgdXaKuAiatBkpglU4YSaqQ7HGB451GgdEMDg-KWtxyTg-nhWqC5vztkVEaRwu4TAyUQW+JM+J7BDHqg0XEUMZhqy0rgriSEUJoQwlhbhK1w4WTuAqfENcBrfBVAqbcgNxhKhxOYeiuImIKOyko7yHFX4BSMsQ4WQM3iiPOnvBqisHIYmcr3G4ZRwx1FuGw66t0PERx7jGNoxErjyOuCTT4uNnbqWioSBUT9FGDmcSODhPJ-Z625sHWJeiHDtlQZ8Do9QBoJl1LUXGIjmjywJASBxMNcDZzQqkfOGBKklFDIaMw6VSKZM+MAjQrkyFGmYkBIYVhMr5J8APIeI9RKY3gaGXsyom43GcGcK4bQdy2EEB2Xufj5ZXB+J7dwrggA */
   id: 'Tetris',
   context: {
     place: new Place(),
-    currentPiece: PieceMap[0],
+    currentPiece: new PieceMap[0](),
+    popupText: '',
   },
   initial: 'New Game',
   states: {
@@ -162,13 +191,16 @@ export const tetrisMachine = setup({
         'Check Is At Bottom': {
           always: [
             {
-              guard: 'is at Bottom',
-              actions: 'setPieceStatic',
+              guard: 'is collide Bottom',
+              actions: [
+                { type: 'movePieceWhenOutOfRange', params: { axis: 'y' } },
+                'setPieceStatic',
+              ],
               target: 'Check Is Line',
             },
             {
-              guard: 'is collide piece',
-              actions: 'setPieceStatic',
+              guard: 'is collide Piece',
+              actions: ['restorePieceCoordinates', 'setPieceStatic'],
               target: 'Check Is Line',
             },
             {
@@ -178,14 +210,33 @@ export const tetrisMachine = setup({
           ],
         },
         'Check Is Line': {
+          entry: 'renderPiece',
           always: [
             {
               guard: 'is line',
-              actions: ['calcScore', 'cleanLine'],
-              target: 'New Round',
+              target: 'Calculate Score',
             },
             {
               target: 'New Round',
+            },
+          ],
+        },
+        'Calculate Score': {
+          always: [
+            {
+              guard: 'is T Spin',
+              actions: [
+                'TSpinCalc',
+                { type: 'assignPopupText', params: { popupText: 'T Spin!!!' } },
+              ],
+              target: '#Tetris.Animation',
+            },
+            {
+              actions: [
+                'calcScore',
+                { type: 'assignPopupText', params: { popupText: 'normal' } },
+              ],
+              target: '#Tetris.Animation',
             },
           ],
         },
@@ -193,7 +244,7 @@ export const tetrisMachine = setup({
           entry: ['generateNewPiece'],
           always: [
             {
-              guard: 'is at Top',
+              guard: 'is collide Piece',
               target: '#Tetris.Game Over',
             },
             { actions: 'renderPiece', target: 'Control' },
@@ -215,20 +266,23 @@ export const tetrisMachine = setup({
             },
             DROP_DOWN: {
               actions: 'dropDown',
-              target: 'New Round',
+              target: 'Check Is At Bottom',
             },
           },
         },
         'Check Is Out Of Border': {
           always: [
             {
-              guard: 'is out of Border',
-              actions: 'renderHistoryPiece',
+              guard: or(['is collide Right', 'is collide Left']),
+              actions: [
+                { type: 'movePieceWhenOutOfRange', params: { axis: 'x' } },
+                'renderPiece',
+              ],
               target: 'Control',
             },
             {
-              guard: 'is collide piece',
-              actions: 'renderHistoryPiece',
+              guard: 'is collide Piece',
+              actions: ['restorePieceCoordinates', 'renderPiece'],
               target: 'Control',
             },
             {
@@ -239,11 +293,24 @@ export const tetrisMachine = setup({
         },
       },
     },
+
     'Game Over': {
       on: {
         RESTART_GAME: {
           target: 'New Game',
           actions: 'cleanPlace',
+        },
+      },
+    },
+
+    Animation: {
+      invoke: {
+        src: 'animationTimerLogic',
+      },
+      on: {
+        ACTIVATE_CLEAN: {
+          actions: ['cleanLine', { type: 'assignPopupText', params: { popupText: '' } }],
+          target: '#Tetris.In Progress.New Round',
         },
       },
     },

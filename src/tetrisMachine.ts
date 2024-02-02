@@ -130,7 +130,7 @@ export const tetrisMachine = setup({
     generateNewPiece: ({ context }) => {
       while (context.pieceQueue.length <= 10) {
         const randomNum: number = Math.floor(Math.random() * 7)
-        context.pieceQueue.push(new PieceMap[5]())
+        context.pieceQueue.push(new PieceMap[randomNum]())
       }
 
       context.currentPiece = context.pieceQueue.shift()!
@@ -190,7 +190,7 @@ export const tetrisMachine = setup({
       currentPiece.yAxis === 0 && place.checkIsPiecesCollide(currentPiece.coordinates),
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAFYATABoQAT0QAOAIy4ALAE4r6gOwBmC+sGCbxiwF93u1Jhy4AkgokAAoYklAYcLC0HMEsLAAiAKrBbAkA8gDq+EKiSCBSMnKKymoIxoJmAGy4hhaGdmaNVZrqVeq6BgiaFja4NoJ2Lm5m6k6aZp7e6Nh4gSFhEVExADJZKWlZOSLKhbLySvllFZa4gsZjdup2FYM2VZ2Imue4E1ZmDR+CFoLqhlMgHyzAJBULhSKwaLIfwAYQA0rldtJ9iUjohjJobI9yhiLLgqhiXDZRmNflUAUC-PMwUtIbgYQALMAAYwA1iR-LASAw0CQAEKSNBoSRUWiI-J7YqHUBlMw2PGGYm9YlNKoWHoPfTozR2GpmMzGdp2GwDKo2TSaCkzKmgxYQvCMlnsznc3kCoUisXGPISZFS0qIOUKpUm-W69UWTVdYwxvrXS46tWGA1W3xzW3gqL0plsjlcnn8wXC0X8TQ+gp+g4BhBB2ohlXhjXY4xXdS4RqGSoWA0WC4TVPA6l2rOO3MulZYBR0cW+opVtEIRVxgaY6pmlpR9FytvqXo-OwTZMx9QDm0LTN00fOrkTqde8uS+cyowm3C2QSrqrrzSbhBftsHpoipWA4BLtKe6bnrSDoUAANsyACusEUGgYAkBwzKSJEYo7BKlaos+3QTGY7b1K0ljkVoZjNvqO4Em03ZmD+3YQSCUH2vScGIchqHoZh2H8N6SJzgRqhPMRpGGOR6rqKMEzNgeNTtLJXwGoYLSTF4gLWpBNIcYQpA8JICEKBAOEPvh0piURsmSdJlHyVqCBUfi8oEs01S4qxQ4XngBkkEZJlmYJFkiVZxxAXYrnGCYggmDYbTGNiPyCLUYwmN2bT3P8WmUrpw6XoomCSLBtA8Ok3DICwM4VmF1aGlJZwtLq3w2MmdjYq4mi4BcVSCMpGJVEx5K5TpbF6SORVhKVTDpAAauwKwsAAYgIuGzii4XolUjX9YmrXtdi6ndeoFzGrJwE9Ceo1puNBUOlNJW0LNC1sDw-hkAAEmtoWbfVO3dXtLW9IdTkVBidYfBafwDCmN2Dhm0H0o9pUJOVqQZNkNWPqJEXqT1Zi-IYJhOH8YzJdUaV-HFUkfoYp3eYjHFXnmJDpAhvLpAAZoWGAQGAGDmcJf0Lg1gPNX1INNM2hpRTqBoHm0OqYh48NnhNl45tebMc2zPMCnzAv3sL-qiwMO4mlY9R-ITB7Nq0bYxa4ji-KdbWM+xI5a6z7Oc-rWH84Lpa-abhHGPcNQTG4vYVFJDjYl+NS9ZoLaYj0lg5dMt2UDQbMAG5GzwLBcLwyBsIwrDY5Z1Y-g4ry2LuX6E2qWJOVo3VMZG4duAewGsQwChYFQKEHLQDAwtCc0MFVbAwktDDbCHT7WVozZ-En+qRvu1zGp4WkKJI-PwPkeUm8vsrYgAtG2Vu33fjg2Kx-k52AZ+408tNnJbnYXAMGIdG3Qm7YLR1GeB+cOlo1b5V8m-LaCB5TYmNEnJWQ0ThSRaB7DWDpvYugLO6YssCa6uFwJGRUTFdwxnDglGW1wzjE1kgw9BmD7rZidKzW8r88J1QXOaGodQib6nsJiYmNC8QfHplYcG1x9TMN8pxeCSEUJoQwlhThG1Q7WVjoYfolgt4XHqG1Gi9hahBgStcOo9RM7aVuj5JG-lAqmUIaLSoqVm6tF6sSD8rcujXCUkrYwQYPgWCuLIpGMIUZOLDqMGoTgTRuAuLJB2R1IwkM7CTFW9QmihOZjgrkvs9a80DpEzRW8v6dl1AxdUhgE6dlePUPc1wWw7VVlnYEL984C2KWUCYNx2zEjanYBwyY0nYnbuYPaCT0rtE0q0vwA8h4j1EjjOBEwdT9CEYaZ4kYOpg31KYH81Q4o-guITSBnggA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAFYATABoQAT0QAOAIy51gi4MMA2TdYDMAdmOb1AXze7UmHLgCSCiQAChiSUBhwsLQcQSwsACIAqkFs8QDyAOr4QqJIIFIycorKagjGgo4AnLiCmo4ALPWO9pqClfXG6roGCJqVjriOgvbGxo6ulcb11o0eXujYeAHBoeGR0QAymcmpmdkiygWy8kp5peUmuFPTdi6C1sbWXfqIraauljOV38aG9nMgbyLfyBEJhCKwKLIPwAYQA0jlDtJjsUzogXI5uujRtYrvZ1A11IYrNZvu5PICFr5lmC1pDcDCABZgADGAGsSH5YCQGGgSAAhSRoNCSKi0RF5I5FU6gUpNaqGRzmexWeqGOpWLFlVrVNWGRWaFrWJ6CeoAoHU0GrCF4Jmsjlcnl8wXC0Xi4y5CTI6UlRDy3CK5Wq9VDQxa0ZjMz4pWaOqGLRq81UpZW8GRBnM9mc7m8gVCkVi-iaT35b0nX0If2B4bBjVhl5lFWmRrGb6GhqORzWJM+FMrNP0u1Zx0bLAKOgSr2FctohDtUzqkx-UnqB6dcP1Ow1An2ezx9oNCo94E063pocO7mj8fuktSmeyxDzgOaJf2Fdr549Y3qXAtPpOG2nTqMYx6Wv2dK2hQAA2LIAK7QRQaBgCQHAspIETigckplqij69Cqhi4E8DjNEqaqVKa4b2JUuK1CSVQgaM-RgX2tI2gyMHwYhyGoehmH8B6SLTnhqivIRxGrk4TjqBRVENhiAyjPU6j9LYZLvqxIIQRxhCkDwkhwQoEBYXeuEymJBG-JJpEyXJ9RagmxFVM4xhNpuslaaeA54HpJAGUZJmCWZIkWec9hNLglR9Iq8bWPGtRfk+FgBuoqntFYLQ2GaFIWmxZ6DoomCSNBtA8Gk3DICwk6lqFFZjNMf6tGqMwtSSWrOJoVyrnYjSGGqIzdrlybaex55FaEpVMGkABq7AbCwABiAjYVOKJheiDS4i0prZW1NhajYXUgauWjDPFjTkvMvajQVtoTSVtDTXNbA8H4ZAABIrSF631VtTW7a1NjtQpgguAGDRtlYsZPF5qaQQyD2lfE5UpOkWQ1feonheYf6VMDDxaDR8Zau0uJxdDrhElMV2Ujd3kIxe2YkGkcF8mkABmeYYBAYAYKZwm-bODXbc1e3AwdCmPPYuCGvUu6aBi8VpXDOnnpml4s2zLNc4KPN87egs+sLXYKu+mj1P0DVNOGVNXIGTS-IY3y2KrY2DhrzOs+zusYbz-NFj9xv4b8KpmBYdjEq+5RJQgxq4p0tjOC0sn6jl13ApQNAswAbgbPAsFwvDIGwjCsJj5kVhqMsnZbRLQ61jmxrgm79Ka9zRbcWkMAoWBUEhJy0AwMLQjNDBVWwMILQw+xBw+llaOG6jvsRpqtk8lT4mDHgUgoki8-AeR5Ub89ylqAC0Q0Z74flZ2AJ-Y68ad-vi-TO3Ye71j0smCE1AF9G0Y0ww3Z3QfhtBAVQtROATj1V8YM-gNEMCAnyGZ7TM1zC6AsYCq7OCivFTsVR+iOH6pUcMblqgPENG0VwKpKJXzpieeGHEmYjjHPfHCdVZzjHJnQmKFsaE6ClmHCKq4xhOHgYmYa9MmHni4ghJCKE0IYXYWtYOllRjLxqBUWinZBDL1XNYDcFs-wVF3G5WwskpjIIRn5AKxlsHC3KPUYiMxWwRn6tYcYjkV4kVcPqSoWg-jWOYUjBxIczqDCeFUNoxCxGx2drifGTiKiGlkipYJ6s0GOm9jrbm-swmWVaLuF+1grCyQtqpYwWp4q-z6JMFUhJVzNC0nfXOfMCmlAtgE4iRo5blFojbBsltcT1HuHUaYxCVS7noXlXAPc+4D1EljcBFt9Q1BGCBBwwx5zUUmIMQ0VtOqPB3m4IAA */
   id: 'Tetris',
   context: {
     place: new Place(),
@@ -218,7 +218,6 @@ export const tetrisMachine = setup({
 
     'In Progress': {
       initial: 'New Round',
-      entry: 'playBGM',
       invoke: {
         id: 'ticks',
         src: 'ticksLogic',
@@ -286,7 +285,7 @@ export const tetrisMachine = setup({
         },
 
         'New Round': {
-          entry: 'generateNewPiece',
+          entry: ['playBGM', 'generateNewPiece'],
           always: [
             {
               guard: 'is game over',
@@ -349,7 +348,7 @@ export const tetrisMachine = setup({
     },
 
     Animation: {
-      entry: 'playCleanLine',
+      entry: ['renderPiece', 'playCleanLine'],
       invoke: {
         src: 'animationTimerLogic',
       },

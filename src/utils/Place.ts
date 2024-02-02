@@ -1,4 +1,4 @@
-import { TSpinPlace, TSpinPlaceFake, mapHeight, mapWidth } from '@/config'
+import { mapHeight, mapWidth } from '@/config'
 import { CollideType, ControlHistory, CoordinateType, PlaceType } from '@/type'
 
 export class Place {
@@ -45,14 +45,14 @@ export class Place {
 
     const collideFunctionMap: Record<CollideType, () => void> = {
       left: () =>
-        coordinates.forEach(([y, x]) => {
+        coordinates.forEach(([, x]) => {
           if (x < 0) {
             outRangeLengthList.push(x)
             isOut = true
           }
         }),
       right: () =>
-        coordinates.forEach(([_, x]) => {
+        coordinates.forEach(([, x]) => {
           if (x > this._width - 1) {
             outRangeLengthList.push(x)
             isOut = true
@@ -91,7 +91,6 @@ export class Place {
         isCollide = true
       }
     })
-    // console.log(this._place)
 
     return {
       isCollide,

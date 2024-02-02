@@ -1,4 +1,4 @@
-import { TSpinPlace, mapHeight, mapWidth } from '../config'
+import { mapHeight, mapWidth } from '../config'
 import { CollideType, CoordinateType, PlaceType } from '../type'
 
 export class Place {
@@ -80,17 +80,17 @@ export class Place {
     }
   }
   // Place
-  public renderPlace(currentPieceCoordinates: CoordinateType[]) {
+  public renderPlace(coordinates: CoordinateType[], pieceCode: number) {
     const newPlace = JSON.parse(JSON.stringify(this._staticPlace)) // deep copy
-    currentPieceCoordinates.forEach(([y, x]) => {
-      newPlace[y][x] = 2
+    coordinates.forEach(([y, x]) => {
+      newPlace[y][x] = pieceCode
     })
     this._place = newPlace
   }
 
-  public setMovingPieceStatic(coordinates: CoordinateType[]) {
+  public setMovingPieceStatic(coordinates: CoordinateType[], pieceCode: number) {
     coordinates.forEach(([y, x]) => {
-      this._staticPlace[y][x] = 1
+      this._staticPlace[y][x] = pieceCode
     })
   }
 
@@ -99,7 +99,7 @@ export class Place {
     let isCollide = false
 
     currentPieceCoordinates.forEach(([y, x]) => {
-      if (this._place[y] && this._place[y][x] === 1) {
+      if (this._place[y] && this._place[y][x] > 20) {
         isCollide = true
         return
       }
@@ -122,7 +122,7 @@ export class Place {
 
   public checkIsLine() {
     this._staticPlace.forEach((y, yIndex) => {
-      if (y.every((x) => x === 1)) {
+      if (y.every((x) => x > 20)) {
         this._lineIndexes.push(yIndex)
       }
     })

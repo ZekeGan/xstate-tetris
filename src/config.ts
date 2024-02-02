@@ -1,19 +1,15 @@
 export const mapWidth = 10
 export const mapHeight = 20
 export const downSpeed = 1000
-export const animationDuration = 500
+export const animationDuration = 700
 
-export const blockCode = {
+export const pieceCode = {
   empty: 0,
-  moving: 1,
-  static: 2,
-  I: 3,
-  J: 4,
-  L: 5,
-  O: 6,
-  S: 7,
-  T: 8,
-  Z: 9,
+  // ===|| Moving Piece ||=== //
+  moving: { I: 11, J: 12, L: 13, O: 14, S: 15, T: 16, Z: 17 },
+
+  // ===|| Static Piece ||=== //
+  static: { I: 21, J: 22, L: 23, O: 24, S: 25, T: 26, Z: 27 },
 }
 
 export const TSpinPlace = [

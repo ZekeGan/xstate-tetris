@@ -20,6 +20,16 @@ export class Piece {
     this._pieceType = pieceType
   }
 
+  get coordinates() {
+    return this._getCoordinates()
+  }
+  get pieceType() {
+    return this._pieceType
+  }
+  get matrix() {
+    return this._matrix
+  }
+
   private _getCoordinates() {
     return this._matrix
       .map((y, yIndex) => {
@@ -67,10 +77,6 @@ export class Piece {
     if (this._controlHistory.length > 10) {
       this._controlHistory.unshift()
     }
-  }
-
-  get coordinates() {
-    return this._getCoordinates()
   }
 
   /**
@@ -218,6 +224,52 @@ class Z_Piece extends Piece {
   }
 }
 
+class Smile_Piece extends Piece {
+  constructor() {
+    super(
+      [
+        [0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 1, 0],
+        [0, 1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 1],
+        [0, 1, 1, 1, 1, 0],
+
+        // [0, 1, 0, 1, 0],
+        // [0, 1, 0, 1, 0],
+        // [0, 0, 0, 0, 0],
+        // [1, 0, 0, 0, 1],
+        // [0, 1, 1, 1, 0],
+      ],
+      'J',
+    )
+  }
+}
+
+class Dead_Piece extends Piece {
+  constructor() {
+    super(
+      [
+        // [0, 0, 0, 0, 0, 0],
+        // [0, 0, 0, 1, 0, 0],
+        // [0, 1, 0, 1, 0, 0],
+        // [0, 0, 0, 0, 0, 0],
+        // [0, 1, 1, 1, 1, 0],
+        // [0, 0, 0, 0, 0, 0],
+
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0],
+      ],
+
+      'I',
+    )
+  }
+}
+
 export const PieceMap: Record<number, any> = {
   0: I_Piece,
   1: J_Piece,
@@ -226,4 +278,6 @@ export const PieceMap: Record<number, any> = {
   4: S_Piece,
   5: T_Piece,
   6: Z_Piece,
+  98: Smile_Piece,
+  99: Dead_Piece,
 }

@@ -1,7 +1,7 @@
-import { EventObject, fromCallback, setup, sendTo, or, assign } from 'xstate'
+import { EventObject, fromCallback, setup, sendTo, or } from 'xstate'
 import { Piece, PieceMap } from './utils/Pieces'
 import { Place } from './utils/Place'
-import { animationDuration, downSpeed } from './config'
+import { animationDuration, downSpeed, pieceCode } from './config'
 import { CoordinateType } from './type'
 
 export const tetrisMachine = setup({
@@ -79,11 +79,12 @@ export const tetrisMachine = setup({
     },
     setPieceStatic: ({ context }) => {
       // context.currentPiece.restoreHistory()
-      const coordinates = context.currentPiece.coordinates
-      context.place.setMovingPieceStatic(coordinates)
+      const { coordinates, pieceType } = context.currentPiece
+      const code = pieceCode.static[pieceType]
+      context.place.setMovingPieceStatic(coordinates, code)
     },
     generateNewPiece: ({ context }) => {
-      const randomNum: number = Math.floor(Math.random() * Object.keys(PieceMap).length)
+      const randomNum: number = Math.floor(Math.random() * 7)
       const newPiece = PieceMap[randomNum]
       context.currentPiece = new newPiece()
     },
@@ -98,8 +99,10 @@ export const tetrisMachine = setup({
       context.currentPiece.restoreHistory()
     },
     renderPiece: ({ context: { place, currentPiece } }) => {
-      const current_coordinates = currentPiece.coordinates
-      place.renderPlace(current_coordinates)
+      const { coordinates, pieceType } = currentPiece
+      const code = pieceCode.moving[pieceType]
+
+      place.renderPlace(coordinates, code)
     },
     calcScore: ({ context }) => {
       context.place.calcScore()
@@ -136,6 +139,9 @@ export const tetrisMachine = setup({
     cleanPlace: ({ context }) => {
       context.place = new Place()
     },
+    setDeadFace: ({ context }) => {
+      context.currentPiece = new PieceMap[99]()
+    },
   },
   guards: {
     'is collide Left': ({ context: { currentPiece, place } }) =>
@@ -153,11 +159,11 @@ export const tetrisMachine = setup({
     'is T Spin': ({ context: { currentPiece } }) => currentPiece.checkIsTSpin(),
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAFYATABoQAT0QAOAIy51gi4PUAWQQE5N1zZvUBfV7tSYcuAJIKSAAUMSSgMOFhaDkCWFgARAFVAtjiAeQB1fCFRJBApGTlFZTUEY0EXXGsAZgB2ADYqwWM7GsMqwzrdAwRNFtwawSrjQxdB62bDa3dPdGw8fyCQsIiogBkMpJSMrJFlfNl5JVySss0asxsa9Rq7YzKa+q7ETSbcUYt1Q3U6hrstaZAXjmfgCwVC4VgkWQvgAwgBpbJ7aQHIrHRDGM5PBA1azWXB1ax1XpNQQDOxVOwAoE+BZg5aQ3AwgAWYAAxgBrEi+WAkBhoEgAIUkaDQkiotERuX2hSOoBK1kMdlwhiugxaTiq1Sq6ixdj6zjsgh+bXGTipsxpoKWELwzLZnO5vP5QpFYolxhyEmRMuKiAVSpV5gpOM0mqq2qxKsMuCqzijxiJgmsn3N3nmVvBEUZLI5XJ5fMFwtF4v4mk9eW9h19CH9ytVwY1Wp1+nRdzquGM2tqpMMVk1qeBtOtWbtucdqywCjokq9BSraIQ5POuPUsZaFOMq6qWOMTlM1j+9iJL2cVQHlsWmYZo4dPInU-d5el87liCXlWTa5qG63WIJpljTQ2j1ZM7hGc900velbQoAAbVkAFdYIoNAwBIDhWUkcIJV2KVK1RV8ehefd6l7TsCTsA8dw3SpPmuFxNV3YwaggkEoJtRk4MQ5DUPQzDsP4D0kTnAjVGeYjKlIpoqgoqiW1KM5NAuZw6i+FUrlYocrzwQhSB4SQEIUCAcKffDZTEoi7kk1TpNkuwsS0Kp8W+TQwNJTtvk0jNoIIYgSH0wzjME0yRPMk4wzMawamaJMbBGWo-ycDtvmY2NWlAqYPEBC1ILpDiYUUTBJFg2geFSbhkBYGcK1C6sE3UJVd0ENoPPJXcakjTdKiNBrDA6dRzGGLz2JHQqQhKphUgANXYVYWAAMQEXDZxRML0TqBqO1sFrtTaqLdSsr47B+cpajsfrhry0aFCKibpvYHhfDIAAJJaQtWuqNsa7ahl2oZ9vkspmpjDE2lUyZ6hYrLqVy4drzG4raDiMrkjSTJqufUTwsJXAmgapN6mO4CsW-PEGqJRU2n6zzoZytiruvHNbxIVIEP5VIADNCwwCAwAwEzhI+hd6u+5rfoa-6OsBso8XqOppNXTcorPWm03puHbSZvMWbZlmuaFHm+cfQWfWF1SlI2jbrjuT4HB0QHT3xGpnHKF4ZOqOpLo17N7W11n2f1rDef50t3tNwjmOqGMXmub9SL1Tp5OdpzP1xBjand1jKBoFmADcjZ4FguF4ZA2EYVgMbM6sXAqaoLCi0N1Axez5IPaMnD+SY-nMOpO1YhgFCwKgUMOWgGBhaEpoYSq2BhOaGB2MOXwsrQd1XJSk2aRwRhsuooayhRJF5+Bchhk3l-lLEAFp20sO-7+atxVeBXTyGoMBz6x54BnbUYZITFwFNE7dCbu2QCwFNRqUmF7bSn81rYhbt0Wo0ZNy901E4DamgCQwJ8jebWBYXTFjgdXaKuAiatBkpglU4YSaqQ7HGB451GgdEMDg-KWtxyTg-nhWqC5vztkVEaRwu4TAyUQW+JM+J7BDHqg0XEUMZhqy0rgriSEUJoQwlhbhK1w4WTuAqfENcBrfBVAqbcgNxhKhxOYeiuImIKOyko7yHFX4BSMsQ4WQM3iiPOnvBqisHIYmcr3G4ZRwx1FuGw66t0PERx7jGNoxErjyOuCTT4uNnbqWioSBUT9FGDmcSODhPJ-Z625sHWJeiHDtlQZ8Do9QBoJl1LUXGIjmjywJASBxMNcDZzQqkfOGBKklFDIaMw6VSKZM+MAjQrkyFGmYkBIYVhMr5J8APIeI9RKY3gaGXsyom43GcGcK4bQdy2EEB2Xufj5ZXB+J7dwrggA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBUwBcBOBLWA6AcmAO4AEA4gIYC2YAxGQIICyAogPoDKyDASsgNoAGALqJQABwD2sLGiySAdmJAAPRAFYATABoQAT0QAOAIy4ALAE4rAZgBs69bc3GnAX1e7UmHLgCSCkgAFDEkoDDhYWg5AlhYAEQBVQLY4gHkAdXwhUSQQKRk5RWU1BGNBTXVzdWsXM2NNAHZDS3VdAwRNCwbcTUFrQQsBsybbWwszd090bDx-IJCwiKiAGQyklIyskWV82XklXJKyxtx1Br71M1tDQ00bhrbEXtNNSwtjC2szZudbSZAvDM-AFgqFwrBIshfABhADS2R20j2RUOiHqD30iAaZmsuEMFls1i0+LqznU-0BPjmoMWENw0IAFmAAMYAaxIvlgJAYaBIACFJGg0JIqLQEbldoUDqASt8LHiGupBMYGsZLE5Gq1MQgrJVNJ1BLZDeVRs0KdMqSCFuC8IyWezOdzeQKhSKxcYchIkVLiog5QqlSq1QT9YrHghDA1utZ9e9XoJ1CZDObvLMrWCIvSmWyOVyefzBcLRfxNJ68t79r6EP7I4HVerQ1r2sYW7jjESzMSfoIzBMPACLWn5hm6Xac47llgFHRxV6CpXUTrrN1OzHXjdemczOG1S5cNitLZhpprtjNCmgdTrZmxw6uZPp+6y5KFzLEJ8V9V9d9bgnseGj0EXA13xXoGisY4L0tYdaVtCgABtmQAV3gig0DAEgOGZSRwjFbYJQrFE3w6Z5TmMM58TGQxDybNFrEjHpBBuWwVX1dtk37SkhxpG16QQ5DUPQzDsNw-gPUReciNUJ5SPUcimgJCxqJPWjShPeV+leMZe2NfUoO4686UIUgeEkJCFAgPDn0I6VpJIlsyIoxTlPscMtE0XB7CcBpvLVFjjH04EYN44ySFM8zLLE6zJNso4vlxCivmxHEjWsAC6lwciNUudtXi+QKrxHW1FEwSR4NoHhUm4ZAWFncsYqrFx1HlYxa36WxsWaL5wxMMxMsca5BAaV5VWXAr01g+kSpCcqmFSAA1dhlhYAAxAR8LnZFYrRewWraw1OpxbdtXeICyi6TSkxcaxxuCm9prK2g5sWtgeF8MgAAl1uirbGt2zL9o674jp3QRDVwQ0DVakwT3I26ePuhRSvKuJKuSNJMjql8pLiq4IeGZVdSYpTbHDBprFxZpCUjbyTw6+HDNtbM7xIVIkN5VIADMCwwCAwAwKyJN+xcmr2xV2sO7rtRbcoIfI25PgJcoVQZoqs3tXNWfZ1nuYFXn+afIWfRF64PPOGplzMRojx8ndnHlCx9TYjrFTOc9OMHIKEdHZnNbZjndZwvmBZLH7jeIlUcWA5qzGVrQKdeMn9X3PpOxxQxl1VP4PdTXBKBoVmADcDZ4FguF4ZA2EYVgsZsqsTyY-d7EjMpmqNUntUsboOoJawCXbLQApzoEGAULAqDQ-ZaAYaEoXmhgarYaFloYLYw9fOytB3LRunAtiBkuIkGncfsFEkPn4FyLijY32VwwAWlsCGwZf1+wbKY-h58UL87AG+caeApU44wgxRhaBnNy5FgKxnIuUOw8DVawX-ttBA4FwyZ36k4coOJHBKkVIg3it5Nb5hdEWZB9dVS4AJLWVilgcRpW1D5bo9Q7jjBuD2Dq7spi50KpNIhE4px-wIg1Rc5Mn74kNISI09QqbhkGG2AY-QeySP7gQm8-EUJoQwlhHCQjNrhzsi2b4nk5IVEMEeWObsdx1D6rqTovQugak-twy8E0QrEDCmZCy5CRZlCAp0MYVhqJOAYe0OSpgvJNX6PLPSX8DJq2hA9eCPiI5KiflbXoYNlyH1CViM4ENhqO37nYeo2cXHQW9kzDWjp-Y6x5sHFJhjHZP16DGCC1xmiGDkUSOWlhygVAJN8MpA5c6-yLvzRpJR4xATavRCmeCMTtC7uYSGbt2EgL7OUvAo9x6TyktjFBmh6IzMGCYQmipyg7j7pUOoHwOpjByn2dwQA */
   id: 'Tetris',
   context: {
     place: new Place(),
-    currentPiece: new PieceMap[0](),
+    currentPiece: new PieceMap[98](),
     popupText: '',
   },
   initial: 'New Game',
@@ -295,6 +301,7 @@ export const tetrisMachine = setup({
     },
 
     'Game Over': {
+      entry: 'setDeadFace',
       on: {
         RESTART_GAME: {
           target: 'New Game',

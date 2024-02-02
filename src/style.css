@@ -10,6 +10,9 @@
   --animationDuration: 500ms;
   --plainBackgroundColor: #FDF2E9;
   --animationTimeFunction: cubic-bezier(.32, .7, .28, .94);
+  --width: 250px;
+  --width__full: 300px;
+
 }
 
 * {
@@ -52,7 +55,7 @@ body {
   display: flex;
   gap: 20px;
   flex-direction: column;
-  min-width: 200px;
+
 }
 
 .display_piece {
@@ -62,11 +65,12 @@ body {
   border: 5px solid black;
   background-color: var(--plainBackgroundColor);
   height: 250px;
-  width: 250px;
+  width: var(--width)
 }
 
 .display_score {
   border: 5px solid black;
+  width: var(--width);
   background-color: var(--plainBackgroundColor);
   display: flex;
   justify-content: end;
@@ -86,6 +90,13 @@ body {
 
 
 /* Clean Animation */
+
+.empty_piece {
+  width: 30px;
+  height: 30px;
+  background-color: var(--plainBackgroundColor)
+}
+
 .place_animation_container {
   width: 100%;
   height: 100%;
@@ -98,7 +109,7 @@ body {
 
 .place_animation_block1 {
   height: 100%;
-  width: 0;
+
   animation-name: animation_block1;
   animation-timing-function: var(--animationTimeFunction);
   animation-duration: var(--animationDuration);
@@ -147,9 +158,38 @@ body {
 }
 
 .place_popup_block {
-  width: 250px;
+  width: var(--width);
   padding: 10px;
   border: 5px solid black;
   background-color: var(--plainBackgroundColor);
+}
 
+.place_popup_text {
+  font-size: 20px;
+  width: var(--width__full);
+  animation-name: popupText_animation;
+  animation-duration: var(--animationDuration);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+
+
+
+@keyframes popupText_animation {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(0);
+    font-size: 50px;
+    opacity: 1;
+
+  }
+
+  100% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
 }

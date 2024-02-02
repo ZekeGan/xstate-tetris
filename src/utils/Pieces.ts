@@ -5,7 +5,7 @@ import {
   Matrix,
   MatrixHistory,
   PieceType,
-} from '../type'
+} from '@/type'
 
 export class Piece {
   private _pieceType!: PieceType
@@ -19,18 +19,10 @@ export class Piece {
     this._matrix = matrix
     this._pieceType = pieceType
   }
-
+  get yAxis() {
+    return this._yAxis
+  }
   get coordinates() {
-    return this._getCoordinates()
-  }
-  get pieceType() {
-    return this._pieceType
-  }
-  get matrix() {
-    return this._matrix
-  }
-
-  private _getCoordinates() {
     return this._matrix
       .map((y, yIndex) => {
         return y.map((x, xIndex) =>
@@ -39,6 +31,25 @@ export class Piece {
       })
       .flat()
       .filter((x) => x) as CoordinateType[]
+  }
+  get coordinateOfEmptyMatrix() {
+    return this._matrix
+      .map((y, yIndex) => {
+        return y.map((x, xIndex) =>
+          x !== 0 ? undefined : [yIndex + this._yAxis, xIndex + this._xAxis],
+        )
+      })
+      .flat()
+      .filter((x) => x) as CoordinateType[]
+  }
+  get pieceType() {
+    return this._pieceType
+  }
+  get matrix() {
+    return this._matrix
+  }
+  get controlHistory() {
+    return this._controlHistory
   }
 
   private _rotate() {
@@ -108,6 +119,7 @@ export class Piece {
    * move current piece down
    */
   public moveDown() {
+    this._saveControlHistory('Down')
     this._saveCoordinatesHistory()
     this._yAxis = this._yAxis + 1
   }
@@ -125,17 +137,6 @@ export class Piece {
   public moveAxisByNumber(axis: 'x' | 'y', number: number) {
     if (axis === 'x') this._xAxis -= number
     if (axis === 'y') this._yAxis -= number
-  }
-
-  public checkIsTSpin() {
-    let isTSpin = false
-    if (this._controlHistory.length === 0) return isTSpin
-
-    const controlHistory = this._controlHistory.pop()
-    if (controlHistory!.pieceType === 'T' && controlHistory!.control === 'Rotate') {
-      isTSpin = true
-    }
-    return isTSpin
   }
 }
 

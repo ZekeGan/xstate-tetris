@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/node": "^20.11.16",
     "@xstate/react": "^4.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -1,5 +1,5 @@
-import { mapHeight, mapWidth } from '../config'
-import { CollideType, CoordinateType, PlaceType } from '../type'
+import { TSpinPlace, TSpinPlaceFake, mapHeight, mapWidth } from '@/config'
+import { CollideType, ControlHistory, CoordinateType, PlaceType } from '@/type'
 
 export class Place {
   private _width: number = mapWidth
@@ -14,6 +14,7 @@ export class Place {
   get place() {
     return this._place
   }
+
   get score() {
     return this._score
   }
@@ -27,15 +28,15 @@ export class Place {
     return this._lineCount
   }
 
+  constructor() {
+    this._staticPlace = this._generateEmptyPlace()
+    this._place = this._generateEmptyPlace()
+  }
+
   private _generateEmptyPlace() {
     return Array(this._height)
       .fill([])
       .map(() => Array(this._width).fill(0)) as CoordinateType[]
-  }
-
-  constructor() {
-    this._staticPlace = this._generateEmptyPlace()
-    this._place = this._generateEmptyPlace()
   }
 
   private _getPieceBorderInfo(coordinates: CoordinateType[], collideType: CollideType) {
@@ -79,6 +80,24 @@ export class Place {
       outRangeLength: outRangeLengthList.length === 0 ? 0 : outRangeMap[collideType],
     }
   }
+
+  private _getCollidePieceInfo(coordinates: CoordinateType[]) {
+    let isCollide = false
+    let collideCount = 0
+
+    coordinates.forEach(([y, x]) => {
+      if (this._place[y] && this._staticPlace[y][x] > 20) {
+        collideCount++
+        isCollide = true
+      }
+    })
+    // console.log(this._place)
+
+    return {
+      isCollide,
+      collideCount,
+    }
+  }
   // Place
   public renderPlace(coordinates: CoordinateType[], pieceCode: number) {
     const newPlace = JSON.parse(JSON.stringify(this._staticPlace)) // deep copy
@@ -95,16 +114,8 @@ export class Place {
   }
 
   // Check
-  public checkIsPiecesCollide(currentPieceCoordinates: CoordinateType[]) {
-    let isCollide = false
-
-    currentPieceCoordinates.forEach(([y, x]) => {
-      if (this._place[y] && this._place[y][x] > 20) {
-        isCollide = true
-        return
-      }
-    })
-    return isCollide
+  public checkIsPiecesCollide(coordinates: CoordinateType[]) {
+    return this._getCollidePieceInfo(coordinates).isCollide
   }
 
   public checkPieceIsOutRange(
@@ -130,6 +141,24 @@ export class Place {
     return this._lineIndexes.length !== 0
   }
 
+  public checkIsTSpin(
+    controlHistory: ControlHistory[],
+    coordinateOfEmptyMatrix: CoordinateType[],
+  ) {
+    let isTSpin = false
+    if (controlHistory.length === 0) return isTSpin
+
+    const { collideCount } = this._getCollidePieceInfo(coordinateOfEmptyMatrix)
+    for (let i = 0; i < 2; i++) {
+      const { pieceType, control } = controlHistory.pop()!
+      if (pieceType === 'T' && control === 'Rotate' && collideCount >= 3) {
+        isTSpin = true
+      }
+    }
+
+    return isTSpin
+  }
+
   // line
   public cleanLine() {
     const newStaticPlace = this._staticPlace
@@ -151,7 +180,7 @@ export class Place {
     let temp = 1
 
     while (pointer < this._lineIndexes.length) {
-      score += 1 * 100 * streakMultiplier
+      score += 1 * 1000 * streakMultiplier
       if (this._lineIndexes[pointer] + 1 === this._lineIndexes[pointer + 1]) {
         pointer += 1
         streakMultiplier += 0.2
@@ -177,6 +206,6 @@ export class Place {
   }
 
   public calcTSpineScroe() {
-    this._score += 500
+    this._score += 3000 * this._lineIndexes.length
   }
 }

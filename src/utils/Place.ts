@@ -14,7 +14,6 @@ export class Place {
   get place() {
     return this._place
   }
-
   get score() {
     return this._score
   }
@@ -97,6 +96,36 @@ export class Place {
       collideCount,
     }
   }
+
+  private _calcNormalScore() {
+    if (this._lineIndexes.length === 0) return { score: 0, lineCount: 0 }
+    let score: number = 0
+    let pointer = 0
+    let streakMultiplier = 1
+
+    const lineCount: number[] = []
+    let temp = 1
+
+    while (pointer < this._lineIndexes.length) {
+      score += 1 * 1000 * streakMultiplier
+      if (this._lineIndexes[pointer] + 1 === this._lineIndexes[pointer + 1]) {
+        pointer += 1
+        streakMultiplier += 0.2
+        temp++
+        continue
+      }
+      lineCount.push(temp)
+      temp = 1
+      streakMultiplier = 1
+      pointer += 1
+    }
+
+    return {
+      score,
+      lineCount: Math.max(...lineCount),
+    }
+  }
+
   // Place
   public renderPlace(coordinates: CoordinateType[], pieceCode: number) {
     const newPlace = JSON.parse(JSON.stringify(this._staticPlace)) // deep copy
@@ -169,35 +198,7 @@ export class Place {
     this._staticPlace = newStaticPlace
   }
 
-  private _calcNormalScore() {
-    if (this._lineIndexes.length === 0) return { score: 0, lineCount: 0 }
-    let score: number = 0
-    let pointer = 0
-    let streakMultiplier = 1
-
-    const lineCount: number[] = []
-    let temp = 1
-
-    while (pointer < this._lineIndexes.length) {
-      score += 1 * 1000 * streakMultiplier
-      if (this._lineIndexes[pointer] + 1 === this._lineIndexes[pointer + 1]) {
-        pointer += 1
-        streakMultiplier += 0.2
-        temp++
-        continue
-      }
-      lineCount.push(temp)
-      temp = 1
-      streakMultiplier = 1
-      pointer += 1
-    }
-
-    return {
-      score,
-      lineCount: Math.max(...lineCount),
-    }
-  }
-
+  // Caculate
   public calcScore() {
     const { score, lineCount } = this._calcNormalScore()
     this._score += score

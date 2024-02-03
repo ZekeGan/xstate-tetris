@@ -1,5 +1,7 @@
 # Xstate Tetris
 
+[Visit on CodeSandbox](https://reurl.cc/L4nL3a)
+
 A Tetris Game.
 ![game](./public/images/game-start.jpg)
 

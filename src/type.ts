@@ -13,10 +13,14 @@ export type MatrixHistory = {
 }
 
 export type PieceType = 'I' | 'J' | 'L' | 'T' | 'S' | 'O' | 'Z'
+
 export type Control = 'Left' | 'Right' | 'Rotate' | 'Down'
+
 export type ControlHistory = {
   pieceType: PieceType
   control: Control
 }
 
 export type BorderWidth = { top: boolean; bottom: boolean; left: boolean; right: boolean }
+
+export type Axis = 'x' | 'y'

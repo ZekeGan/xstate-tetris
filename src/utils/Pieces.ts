@@ -15,10 +15,6 @@ export class Piece {
   private _coordinatesHistory: MatrixHistory[] = []
   private _controlHistory: ControlHistory[] = []
 
-  constructor(matrix: Matrix, pieceType: PieceType) {
-    this._matrix = matrix
-    this._pieceType = pieceType
-  }
   get yAxis() {
     return this._yAxis
   }
@@ -50,6 +46,11 @@ export class Piece {
   }
   get controlHistory() {
     return this._controlHistory
+  }
+
+  constructor(matrix: Matrix, pieceType: PieceType) {
+    this._matrix = matrix
+    this._pieceType = pieceType
   }
 
   private _rotate() {
@@ -90,34 +91,24 @@ export class Piece {
     }
   }
 
-  /**
-   * rotate the current piece
-   * @returns void
-   */
   public rotate() {
     this._saveControlHistory('Rotate')
     this._saveCoordinatesHistory()
     this._rotate()
   }
-  /**
-   * move the current piece to right
-   */
+
   public moveRight() {
     this._saveControlHistory('Right')
     this._saveCoordinatesHistory()
     this._xAxis = this._xAxis + 1
   }
-  /**
-   * move the current piece to left
-   */
+
   public moveLeft() {
     this._saveControlHistory('Left')
     this._saveCoordinatesHistory()
     this._xAxis = this._xAxis - 1
   }
-  /**
-   * move current piece down
-   */
+
   public moveDown() {
     this._saveControlHistory('Down')
     this._saveCoordinatesHistory()
@@ -235,29 +226,15 @@ class Smile_Piece extends Piece {
         [0, 0, 0, 0, 0, 0],
         [1, 0, 0, 0, 0, 1],
         [0, 1, 1, 1, 1, 0],
-
-        // [0, 1, 0, 1, 0],
-        // [0, 1, 0, 1, 0],
-        // [0, 0, 0, 0, 0],
-        // [1, 0, 0, 0, 1],
-        // [0, 1, 1, 1, 0],
       ],
       'J',
     )
   }
 }
-
 class Dead_Piece extends Piece {
   constructor() {
     super(
       [
-        // [0, 0, 0, 0, 0, 0],
-        // [0, 0, 0, 1, 0, 0],
-        // [0, 1, 0, 1, 0, 0],
-        // [0, 0, 0, 0, 0, 0],
-        // [0, 1, 1, 1, 1, 0],
-        // [0, 0, 0, 0, 0, 0],
-
         [0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0],
         [0, 1, 0, 0, 1, 0],

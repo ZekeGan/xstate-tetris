@@ -1,6 +1,7 @@
 # Xstate Tetris
 
 A Tetris Game
+
 ![game](./public/images/game-start.jpg)
 
 
@@ -10,10 +11,10 @@ A Tetris Game
 ## Install
 > pnpm install
 
-## run
+## Run
 > pnpm dev
 
-## dependencies
+## Dependencies
 1. Xstate@5.5.2
 2. @xstate/react@4.0.3
 3. react-hotkeys-hook@4.4.4

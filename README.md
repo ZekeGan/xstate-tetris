@@ -1,9 +1,17 @@
 # Xstate Tetris
 
+## Visit on stackblitz
+[stackblitz](https://stackblitz.com/~/github.com/ZekeGan/xstate-tetris)
 
-A Tetris Game.
+A Tetris Game
+
 ![game](./public/images/game-start.jpg)
 
+
+## Install
+> pnpm install
+
+## run
 > pnpm dev
 
 ## dependencies

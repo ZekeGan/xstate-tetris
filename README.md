@@ -1,10 +1,10 @@
 # Xstate Tetris
 
-[Visit on CodeSandbox](https://reurl.cc/L4nL3a)
 
 A Tetris Game.
 ![game](./public/images/game-start.jpg)
 
+> pnpm dev
 
 ## dependencies
 1. Xstate@5.5.2
